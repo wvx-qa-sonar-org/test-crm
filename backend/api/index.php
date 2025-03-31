@@ -1,22 +1,27 @@
 <?php
 
+// Add these headers at the very top of the file, before any other code
+header('Access-Control-Allow-Origin: http://localhost:8081');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
+header('Content-Type: application/json');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header('HTTP/1.1 200 OK');
+    exit();
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Database;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-// Enable CORS
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Content-Type: application/json");
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+// Add at the top after the headers
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Get request path
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -58,26 +63,49 @@ function authenticate() {
 switch ($resource) {
     case 'login':
         if ($method === 'POST') {
+            // Debug: Log incoming request
+            error_log('Login attempt received');
+            error_log('Data received: ' . json_encode($data));
+            
             $email = $data['email'] ?? '';
             $password = $data['password'] ?? '';
 
+            if (empty($email) || empty($password)) {
+                error_log('Missing email or password');
+                http_response_code(400);
+                echo json_encode(['message' => 'Email and password are required']);
+                exit();
+            }
+
             $users = $db->getCollection('users');
+            error_log('Looking for user: ' . $email);
             $user = $users->findOne(['email' => $email]);
 
-            // For testing purposes, let's create a test user if none exists
+            // Debug: Log user lookup result
+            error_log('User found: ' . ($user ? 'yes' : 'no'));
+
+            // For testing purposes, create a test user if none exists
             if (!$user) {
-                $users->insertOne([
+                error_log('Creating test user');
+                $result = $users->insertOne([
                     'email' => 'test@example.com',
                     'password' => password_hash('password123', PASSWORD_DEFAULT),
                     'name' => 'Test User'
                 ]);
+                $user = $users->findOne(['_id' => $result->getInsertedId()]);
             }
 
-            // In production, you should verify password hash
+            // Verify password
+            if (!$user || !password_verify($password, $user->password)) {
+                http_response_code(401);
+                echo json_encode(['message' => 'Invalid email or password']);
+                exit();
+            }
+
             $payload = [
                 'user_id' => (string)$user->_id,
                 'email' => $user->email,
-                'exp' => time() + $_ENV['JWT_EXPIRATION']
+                'exp' => time() + (int)$_ENV['JWT_EXPIRATION']
             ];
 
             $token = JWT::encode($payload, $_ENV['JWT_SECRET'], 'HS256');
