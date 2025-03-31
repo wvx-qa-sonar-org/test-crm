@@ -41,7 +41,7 @@ composer install
 
 Frontend `.env`:
 ```ini
-VUE_APP_API_URL=http://localhost:8000/api
+VUE_APP_API_URL=http://localhost:8001/api
 ```
 
 Backend `backend/.env`:
@@ -68,7 +68,7 @@ npm run start:db
 ```bash
 npm run start:backend
 # or
-cd backend && php -S localhost:8000
+cd backend && php -S localhost:8001
 ```
 
 3. Start Vue Frontend:
@@ -83,7 +83,7 @@ npm run start:all
 
 The application will be available at:
 - Frontend: http://localhost:8080
-- Backend API: http://localhost:8000
+- Backend API: http://localhost:8001
 - MongoDB Express UI: http://localhost:8081
 
 ## Project Structure
@@ -117,7 +117,7 @@ test-crm/
 ```bash
 cd backend
 composer install
-php -S localhost:8000
+php -S localhost:8001
 ```
 
 ### Frontend Development
