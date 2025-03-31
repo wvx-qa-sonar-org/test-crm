@@ -21,3 +21,12 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Docker
+docker-compose.yml
+
+# MongoDB
+mongodb_data
+
+# Backend
+backend/.env
