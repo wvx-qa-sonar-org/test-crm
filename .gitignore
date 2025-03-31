@@ -6,6 +6,7 @@ node_modules
 # local env files
 .env.local
 .env.*.local
+.env
 
 # Log files
 npm-debug.log*
@@ -30,3 +31,6 @@ mongodb_data
 
 # Backend
 backend/.env
+
+# Vendor
+vendor
