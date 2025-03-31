@@ -1,0 +1,85 @@
+{
+    "users": [
+      {
+        "id": 1,
+        "name": "Test User",
+        "email": "user@example.com",
+        "password": "password"
+      }
+    ],
+    "login": {
+      "token": "fake-jwt-token",
+      "user": {
+        "id": 1,
+        "name": "Test User",
+        "email": "user@example.com"
+      }
+    },
+    "register": {
+      "success": true
+    },
+    "tickets": [
+      {
+        "id": 1,
+        "subject": "Website not loading",
+        "description": "The company website is not loading properly in Chrome.",
+        "status": "Open",
+        "priority": "High",
+        "created": "2023-07-15",
+        "client": "Acme Corp",
+        "clientId": 1,
+        "clientEmail": "contact@acmecorp.com",
+        "clientPhone": "123-456-7890",
+        "clientAvatar": "https://via.placeholder.com/60"
+      },
+      {
+        "id": 2,
+        "subject": "Email service down",
+        "description": "Email service is not working since this morning.",
+        "status": "Pending",
+        "priority": "Urgent",
+        "created": "2023-07-14",
+        "client": "XYZ Industries",
+        "clientId": 2,
+        "clientEmail": "support@xyz.com",
+        "clientPhone": "987-654-3210",
+        "clientAvatar": "https://via.placeholder.com/60"
+      }
+    ],
+    "clients": [
+      {
+        "id": 1,
+        "name": "Acme Corp",
+        "email": "contact@acmecorp.com",
+        "phone": "123-456-7890"
+      },
+      {
+        "id": 2,
+        "name": "XYZ Industries",
+        "email": "support@xyz.com",
+        "phone": "987-654-3210"
+      }
+    ],
+    "dashboard": {
+      "totalTickets": 10,
+      "pendingTickets": 3,
+      "resolvedTickets": 5,
+      "totalClients": 4,
+      "recentTickets": [
+        {
+          "id": 1,
+          "subject": "Website not loading",
+          "client": "Acme Corp",
+          "status": "Open",
+          "created": "2023-07-15"
+        },
+        {
+          "id": 2,
+          "subject": "Email service down",
+          "client": "XYZ Industries",
+          "status": "Pending",
+          "created": "2023-07-14"
+        }
+      ]
+    }
+  }
