@@ -55,7 +55,7 @@
   import axios from 'axios';
   
   export default {
-    name: 'Register',
+    name: 'RegisterForm',
     data() {
       return {
         name: '',
@@ -74,7 +74,7 @@
         }
         
         try {
-          const response = await axios.post('/api/register', {
+          await axios.post('/api/register', {
             name: this.name,
             email: this.email,
             password: this.password

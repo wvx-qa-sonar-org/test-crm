@@ -85,7 +85,7 @@
   import axios from 'axios';
   
   export default {
-    name: 'Dashboard',
+    name: 'DashboardView',
     components: {
       Sidebar,
       Header

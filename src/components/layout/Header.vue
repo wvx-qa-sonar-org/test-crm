@@ -27,7 +27,7 @@
   
   <script>
   export default {
-    name: 'Header',
+    name: 'AppHeader',
     data() {
       return {
         showDropdown: false,
