@@ -27,6 +27,7 @@
           Don't have an account? <router-link to="/register">Sign Up</router-link>
         </p>
         <p v-if="error" class="error-message">{{ error }}</p>
+        <p v-if="status" class="status-message">{{ status }}</p>
       </div>
     </div>
   </template>
@@ -40,16 +41,22 @@
       return {
         email: '',
         password: '',
-        error: null
+        error: null,
+        status: null
       }
     },
     methods: {
       async login() {
+        this.status = "Attempting to log in...";
+        this.error = null;
+        
         try {
-          const response = await axios.post('/api/login', {
-            email: this.email,
-            password: this.password
-          });
+          this.status = "Connecting to API...";
+          
+          // For JSON Server, we'll just fetch the pre-defined login response
+          const response = await axios.get('http://localhost:3000/login');
+          
+          this.status = "Login successful, storing data...";
           
           // Store token in localStorage
           localStorage.setItem('token', response.data.token);
@@ -59,10 +66,14 @@
           this.$store.commit('setUser', response.data.user);
           this.$store.commit('setAuthenticated', true);
           
+          this.status = "Redirecting to dashboard...";
+          
           // Redirect to dashboard
           this.$router.push('/dashboard');
         } catch (err) {
-          this.error = err.response?.data?.message || 'Login failed. Please try again.';
+          console.error('Login error:', err);
+          this.error = `Login failed: ${err.message}`;
+          this.status = null;
         }
       }
     }
@@ -134,6 +145,12 @@
   
   .error-message {
     color: #e74c3c;
+    text-align: center;
+    margin-top: 15px;
+  }
+  
+  .status-message {
+    color: #3498db;
     text-align: center;
     margin-top: 15px;
   }

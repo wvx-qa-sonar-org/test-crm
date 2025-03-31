@@ -74,16 +74,14 @@
         }
         
         try {
-          await axios.post('/api/register', {
-            name: this.name,
-            email: this.email,
-            password: this.password
-          });
+          // For JSON Server, we'll just fetch the pre-defined register response
+          await axios.get(`${process.env.VUE_APP_API_URL}/register`);
           
           // Redirect to login page after successful registration
           this.$router.push('/login');
         } catch (err) {
-          this.error = err.response?.data?.message || 'Registration failed. Please try again.';
+          this.error = 'Registration failed. Please try again.';
+          console.error(err);
         }
       }
     }
