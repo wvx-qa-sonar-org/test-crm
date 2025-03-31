@@ -17,6 +17,7 @@ A Customer Relationship Management (CRM) application built with Vue.js 2 and PHP
 - PHP (v7.4 or higher)
 - Composer
 - Docker (for MongoDB)
+- MongoDB PHP Extension
 
 ## Installation
 
@@ -37,7 +38,18 @@ cd backend
 composer install
 ```
 
-4. Create Environment Files:
+4. Install MongoDB PHP Extension:
+```bash
+# Windows with XAMPP
+pecl install mongodb
+# Add "extension=mongodb.so" or "extension=php_mongodb.dll" to php.ini
+
+# Linux
+sudo pecl install mongodb
+# Add "extension=mongodb.so" to php.ini
+```
+
+5. Create Environment Files:
 
 Frontend `.env`:
 ```ini
@@ -46,32 +58,38 @@ VUE_APP_API_URL=http://localhost:8001/api
 
 Backend `backend/.env`:
 ```ini
-MONGODB_URI=mongodb://localhost:27016
+MONGODB_URI=
 JWT_SECRET=your_generated_secret_key_here
 JWT_EXPIRATION=3600
 ```
 
-5. Generate JWT Secret:
+6. Generate JWT Secret:
 ```bash
 php -r "echo bin2hex(random_bytes(32));"
 ```
 Copy the output to your `backend/.env` JWT_SECRET.
+
 
 ## Running the Application
 
 1. Start MongoDB (in Docker):
 ```bash
 npm run start:db
+# Wait about 30 seconds for MongoDB to initialize
 ```
 
-2. Start PHP Backend:
+2. Verify MongoDB Connection:
+- Open MongoDB Compass
+- Connect using: `mongodb://admin:password@localhost:27016/crm?authSource=admin`
+- Or access Mongo Express UI at: http://localhost:8081
+
+3. Start PHP Backend:
 ```bash
-npm run start:backend
-# or
-cd backend && php -S localhost:8001
+cd backend
+php -S localhost:8001
 ```
 
-3. Start Vue Frontend:
+4. Start Vue Frontend:
 ```bash
 npm run serve
 ```
@@ -82,9 +100,16 @@ npm run start:all
 ```
 
 The application will be available at:
-- Frontend: http://localhost:8080
+- Frontend: http://localhost:8081 (or port shown in terminal)
 - Backend API: http://localhost:8001
 - MongoDB Express UI: http://localhost:8081
+
+## Default Test Account
+
+Email: test@example.com
+Password: password123
+```
+The test account is automatically created on first login attempt.
 
 ## Project Structure
 
@@ -110,6 +135,23 @@ test-crm/
 - `POST /api/clients` - Create new client
 - `GET /api/tickets` - List all tickets
 - `POST /api/tickets` - Create new ticket
+
+## Troubleshooting
+
+### CORS Issues
+The backend includes CORS headers for development. In `backend/api/index.php`:
+```php
+header('Access-Control-Allow-Origin: *');  // Development only
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+```
+
+### MongoDB Connection
+If MongoDB connection fails:
+1. Check if MongoDB container is running: `docker ps`
+2. Verify credentials in `.env` file
+3. Try accessing Mongo Express UI at http://localhost:8081
+4. Check PHP MongoDB extension: `php -m | grep mongodb`
 
 ## Development
 
@@ -153,7 +195,11 @@ npm run build
    - The `dist/` directory for frontend static files
    - The `backend/` directory for PHP API endpoints
 
-3. Update environment variables for production settings
+3. Update environment variables for production:
+   - Set proper MongoDB credentials
+   - Change CORS headers to your domain
+   - Use secure JWT secret
+   - Enable HTTPS
 
 ## License
 
