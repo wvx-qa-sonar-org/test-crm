@@ -108,12 +108,12 @@ The application will be available at:
 
 Email: test@example.com
 Password: password123
-```
+
 The test account is automatically created on first login attempt.
 
 ## Project Structure
 
-
+```
 test-crm/
 ├── src/                    # Vue frontend source
 │   ├── components/
