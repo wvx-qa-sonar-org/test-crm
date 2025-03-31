@@ -80,7 +80,7 @@ npm run start:db
 
 2. Verify MongoDB Connection:
 - Open MongoDB Compass
-- Connect using: `mongodb://admin:password@localhost:27016/crm?authSource=admin`
+- Connect using: `mongodb://data@localhost:27016/crm?authSource=admin`
 - Or access Mongo Express UI at: http://localhost:8081
 
 3. Start PHP Backend:
@@ -113,7 +113,7 @@ The test account is automatically created on first login attempt.
 
 ## Project Structure
 
-```
+
 test-crm/
 ├── src/                    # Vue frontend source
 │   ├── components/
