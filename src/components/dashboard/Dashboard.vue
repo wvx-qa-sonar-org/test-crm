@@ -7,11 +7,20 @@
           <div class="stats-cards">
             <div class="stat-card">
               <div class="stat-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-details">
+                <h3>Total Clients</h3>
+                <p class="stat-number">{{ stats.totalClients }}</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
                 <i class="fas fa-ticket-alt"></i>
               </div>
               <div class="stat-details">
                 <h3>Total Tickets</h3>
-                <p class="stat-number">{{ totalTickets }}</p>
+                <p class="stat-number">{{ stats.totalTickets }}</p>
               </div>
             </div>
             <div class="stat-card">
@@ -19,8 +28,8 @@
                 <i class="fas fa-clock"></i>
               </div>
               <div class="stat-details">
-                <h3>Pending</h3>
-                <p class="stat-number">{{ pendingTickets }}</p>
+                <h3>Open Tickets</h3>
+                <p class="stat-number">{{ stats.ticketsByStatus.open }}</p>
               </div>
             </div>
             <div class="stat-card">
@@ -28,51 +37,26 @@
                 <i class="fas fa-check-circle"></i>
               </div>
               <div class="stat-details">
-                <h3>Resolved</h3>
-                <p class="stat-number">{{ resolvedTickets }}</p>
-              </div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">
-                <i class="fas fa-users"></i>
-              </div>
-              <div class="stat-details">
-                <h3>Clients</h3>
-                <p class="stat-number">{{ totalClients }}</p>
+                <h3>Closed Tickets</h3>
+                <p class="stat-number">{{ stats.ticketsByStatus.closed }}</p>
               </div>
             </div>
           </div>
           
           <div class="recent-tickets">
-            <h2>Recent Tickets</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Subject</th>
-                  <th>Client</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="ticket in recentTickets" :key="ticket.id">
-                  <td>#{{ ticket.id }}</td>
-                  <td>{{ ticket.subject }}</td>
-                  <td>{{ ticket.client }}</td>
-                  <td>
-                    <span :class="'status-badge ' + ticket.status.toLowerCase()">
-                      {{ ticket.status }}
-                    </span>
-                  </td>
-                  <td>{{ ticket.created }}</td>
-                  <td>
-                    <button class="btn-view" @click="viewTicket(ticket.id)">View</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <h2>Recent Activities</h2>
+            <div class="activities-list">
+              <div v-for="ticket in stats.recentActivities" :key="ticket._id" class="activity-item">
+                <div class="activity-icon" :class="getStatusClass(ticket.status)">
+                  <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="activity-content">
+                  <h4>{{ ticket.subject }}</h4>
+                  <p>{{ ticket.client }} - {{ ticket.status }}</p>
+                  <small>{{ formatDate(ticket.created) }}</small>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -92,11 +76,16 @@
     },
     data() {
       return {
-        totalTickets: 0,
-        pendingTickets: 0,
-        resolvedTickets: 0,
-        totalClients: 0,
-        recentTickets: []
+        stats: {
+          totalClients: 0,
+          totalTickets: 0,
+          ticketsByStatus: {
+            open: 0,
+            pending: 0,
+            closed: 0
+          },
+          recentActivities: []
+        }
       }
     },
     created() {
@@ -105,24 +94,41 @@
     methods: {
       async fetchDashboardData() {
         try {
-          const response = await axios.get('/api/dashboard', {
+          const response = await axios.get(`${process.env.VUE_APP_API_URL}/dashboard`, {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
           });
           
-          const data = response.data;
-          this.totalTickets = data.totalTickets;
-          this.pendingTickets = data.pendingTickets;
-          this.resolvedTickets = data.resolvedTickets;
-          this.totalClients = data.totalClients;
-          this.recentTickets = data.recentTickets;
+          // Check the response format and adapt if needed
+          if (response.data.status && response.data.data) {
+            this.stats = response.data.data;
+          } else {
+            // Handle the existing format from index.php
+            this.stats = {
+              totalClients: response.data.totalClients || 0,
+              totalTickets: response.data.totalTickets || 0,
+              ticketsByStatus: {
+                open: response.data.totalTickets - (response.data.pendingTickets + response.data.resolvedTickets) || 0,
+                pending: response.data.pendingTickets || 0,
+                closed: response.data.resolvedTickets || 0
+              },
+              recentActivities: response.data.recentTickets || []
+            };
+          }
         } catch (error) {
           console.error('Error fetching dashboard data:', error);
         }
       },
-      viewTicket(id) {
-        this.$router.push(`/tickets/${id}`);
+      getStatusClass(status) {
+        return {
+          'status-open': status === 'Open',
+          'status-pending': status === 'Pending',
+          'status-closed': status === 'Closed'
+        }
+      },
+      formatDate(date) {
+        return new Date(date).toLocaleDateString();
       }
     }
   }
