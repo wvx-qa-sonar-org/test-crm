@@ -6,7 +6,11 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "mock-api": "json-server --watch db.json --port 3000"
+    "mock-api": "json-server --watch db.json --port 3000",
+    "start:db": "docker-compose up -d",
+    "stop:db": "docker-compose down",
+    "start:backend": "cd backend && php -S localhost:8001",
+    "start:all": "npm run start:db && npm run start:backend && npm run serve"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",

@@ -53,8 +53,10 @@
         try {
           this.status = "Connecting to API...";
           
-          // For JSON Server, we'll just fetch the pre-defined login response
-          const response = await axios.get('http://localhost:3000/login');
+          const response = await axios.post(`${process.env.VUE_APP_API_URL}/login`, {
+            email: this.email,
+            password: this.password
+          });
           
           this.status = "Login successful, storing data...";
           
@@ -66,13 +68,16 @@
           this.$store.commit('setUser', response.data.user);
           this.$store.commit('setAuthenticated', true);
           
+          // Set axios default authorization header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+          
           this.status = "Redirecting to dashboard...";
           
           // Redirect to dashboard
           this.$router.push('/dashboard');
         } catch (err) {
           console.error('Login error:', err);
-          this.error = `Login failed: ${err.message}`;
+          this.error = err.response?.data?.message || 'Login failed. Please try again.';
           this.status = null;
         }
       }
