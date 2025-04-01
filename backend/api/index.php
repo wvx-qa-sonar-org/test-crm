@@ -319,27 +319,172 @@ switch ($resource) {
         break;
 
     case 'clients':
-        // Authenticate user for all client operations
+        // Authenticate user
         $user = authenticate();
-
-        if ($method === 'GET') {
-            // Get all clients
-            $clients = $db->getCollection('clients')->find();
-            $result = [];
-
-            foreach ($clients as $client) {
-                $result[] = [
+        
+        if ($id) {
+            // Single client operations
+            $client_id = new MongoDB\BSON\ObjectId($id);
+            $clients = $db->getCollection('clients');
+            
+            if ($method === 'GET') {
+                // Get single client
+                $client = $clients->findOne(['_id' => $client_id]);
+                
+                if (!$client) {
+                    http_response_code(404);
+                    echo json_encode(['message' => 'Client not found']);
+                    exit();
+                }
+                
+                echo json_encode([
                     'id' => (string)$client->_id,
                     'name' => $client->name,
                     'email' => $client->email,
-                    'phone' => $client->phone
-                ];
+                    'phone' => $client->phone,
+                    'address' => $client->address ?? '',
+                    'notes' => $client->notes ?? '',
+                    'created' => isset($client->created) ? date('Y-m-d', $client->created->toDateTime()->getTimestamp()) : date('Y-m-d')
+                ]);
+            } 
+            else if ($method === 'PUT') {
+                // Update client
+                $result = $clients->updateOne(
+                    ['_id' => $client_id],
+                    ['$set' => [
+                        'name' => $data['name'] ?? '',
+                        'email' => $data['email'] ?? '',
+                        'phone' => $data['phone'] ?? '',
+                        'address' => $data['address'] ?? '',
+                        'notes' => $data['notes'] ?? '',
+                        'updated' => new MongoDB\BSON\UTCDateTime(time() * 1000)
+                    ]]
+                );
+                
+                if ($result->getModifiedCount() === 0) {
+                    http_response_code(404);
+                    echo json_encode(['message' => 'Client not found or no changes made']);
+                    exit();
+                }
+                
+                echo json_encode(['message' => 'Client updated successfully']);
+            } 
+            else if ($method === 'DELETE') {
+                // Check if client has tickets
+                $tickets = $db->getCollection('tickets');
+                $ticketsCount = $tickets->countDocuments(['clientId' => (string)$client_id]);
+                
+                if ($ticketsCount > 0) {
+                    http_response_code(400);
+                    echo json_encode(['message' => 'Cannot delete client with existing tickets']);
+                    exit();
+                }
+                
+                // Delete client
+                $result = $clients->deleteOne(['_id' => $client_id]);
+                
+                if ($result->getDeletedCount() === 0) {
+                    http_response_code(404);
+                    echo json_encode(['message' => 'Client not found']);
+                    exit();
+                }
+                
+                echo json_encode(['message' => 'Client deleted successfully']);
+            } 
+            else {
+                http_response_code(405);
+                echo json_encode(['message' => 'Method not allowed']);
             }
-
-            echo json_encode(['clients' => $result]);
-        } else {
-            http_response_code(405);
-            echo json_encode(['message' => 'Method not allowed']);
+        } 
+        else {
+            // Operations on multiple clients
+            if ($method === 'GET') {
+                // Get all clients
+                $clients = $db->getCollection('clients');
+                $result = [];
+                
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+                $skip = ($page - 1) * $limit;
+                
+                $filter = [];
+                if (isset($_GET['search'])) {
+                    $search = $_GET['search'];
+                    $filter = [
+                        '$or' => [
+                            ['name' => ['$regex' => $search, '$options' => 'i']],
+                            ['email' => ['$regex' => $search, '$options' => 'i']],
+                            ['phone' => ['$regex' => $search, '$options' => 'i']]
+                        ]
+                    ];
+                }
+                
+                $totalClients = $clients->countDocuments($filter);
+                $totalPages = ceil($totalClients / $limit);
+                
+                $cursor = $clients->find(
+                    $filter,
+                    [
+                        'sort' => ['name' => 1],
+                        'skip' => $skip,
+                        'limit' => $limit
+                    ]
+                );
+                
+                foreach ($cursor as $client) {
+                    $result[] = [
+                        'id' => (string)$client->_id,
+                        'name' => $client->name,
+                        'email' => $client->email,
+                        'phone' => $client->phone
+                    ];
+                }
+                
+                echo json_encode([
+                    'clients' => $result,
+                    'currentPage' => $page,
+                    'totalPages' => $totalPages,
+                    'totalClients' => $totalClients
+                ]);
+            } 
+            else if ($method === 'POST') {
+                // Create new client
+                if (empty($data['name']) || empty($data['email'])) {
+                    http_response_code(400);
+                    echo json_encode(['message' => 'Name and email are required']);
+                    exit();
+                }
+                
+                $clients = $db->getCollection('clients');
+                
+                // Check if email is already in use
+                $existingClient = $clients->findOne(['email' => $data['email']]);
+                if ($existingClient) {
+                    http_response_code(409);
+                    echo json_encode(['message' => 'Email already in use']);
+                    exit();
+                }
+                
+                $newClient = [
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'] ?? '',
+                    'address' => $data['address'] ?? '',
+                    'notes' => $data['notes'] ?? '',
+                    'created' => new MongoDB\BSON\UTCDateTime(time() * 1000)
+                ];
+                
+                $result = $clients->insertOne($newClient);
+                
+                echo json_encode([
+                    'message' => 'Client created successfully',
+                    'id' => (string)$result->getInsertedId()
+                ]);
+            } 
+            else {
+                http_response_code(405);
+                echo json_encode(['message' => 'Method not allowed']);
+            }
         }
         break;
 

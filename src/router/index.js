@@ -9,6 +9,9 @@ import Dashboard from '../components/dashboard/Dashboard.vue';
 import TicketsList from '../components/tickets/TicketsList.vue';
 import TicketDetail from '../components/tickets/TicketDetail.vue';
 import CreateTicket from '../components/tickets/CreateTicket.vue';
+import ClientsList from '../components/clients/ClientsList.vue';
+import ClientForm from '../components/clients/ClientForm.vue';
+import ClientDetail from '../components/clients/ClientDetail.vue';
 
 Vue.use(VueRouter);
 
@@ -51,6 +54,30 @@ const routes = [
     path: '/tickets/:id',
     name: 'TicketDetail',
     component: TicketDetail,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/clients',
+    name: 'Clients',
+    component: ClientsList,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/clients/new',
+    name: 'NewClient',
+    component: ClientForm,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/clients/:id',
+    name: 'ClientDetail',
+    component: ClientDetail,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/clients/:id/edit',
+    name: 'EditClient',
+    component: ClientForm,
     meta: { requiresAuth: true }
   },
   {
