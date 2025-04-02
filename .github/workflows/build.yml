@@ -16,22 +16,15 @@ jobs:
         with:
           fetch-depth: 0  # Disable shallow clones for better analysis
 
-      - name: Install SonarScanner
-        run: |
-          curl -fsSL -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar-scanner.zip
-          mv sonar-scanner-* sonar-scanner
-          echo "$GITHUB_WORKSPACE/sonar-scanner/bin" >> $GITHUB_PATH
-          export PATH="$GITHUB_WORKSPACE/sonar-scanner/bin:$PATH"
-
-      - name: Run SonarQube Scanner
-        run: sonar-scanner
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       # Optional: Fail the job if the Quality Gate fails
-      # - uses: SonarSource/sonarqube-quality-gate-action@v1
+      # - name: SonarQube Quality Gate Check
+      #   uses: SonarSource/sonarqube-quality-gate-action@v1
       #   timeout-minutes: 5
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
